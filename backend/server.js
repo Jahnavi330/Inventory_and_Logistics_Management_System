@@ -36,3 +36,6 @@ app.use("/auth", authRoutes);
 app.listen(process.env.PORT, () => {
     console.log("Server Running on port " + process.env.PORT);
 });
+app.get("/", (req, res) => {
+    res.send("Inventory & Logistics Management System Backend is Running 🚀");
+});
