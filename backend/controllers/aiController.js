@@ -1,8 +1,7 @@
 const { GoogleGenAI } = require("@google/genai");
 const db = require("../config/db");
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// We are bypassing the @google/genai SDK bug by using native HTTP fetch directly.
 
 // Cache - 10 min TTL to reduce repeated quota hits
 const cache = {
@@ -26,10 +25,31 @@ const MODELS = [
 // Helper: try AI generation with automatic model fallback on 503/overload AND 429 quota
 const generateWithFallback = async (prompt) => {
     let lastError;
+    const apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim().replace(/^["']|["']$/g, '') : null;
+    
+    if (!apiKey) {
+        throw new Error("GEMINI_API_KEY environment variable is missing!");
+    }
+
     for (const model of MODELS) {
         try {
-            const response = await ai.models.generateContent({ model, contents: prompt });
-            return response;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            const data = await res.json();
+            
+            if (!res.ok) {
+                const err = new Error(data.error?.message || JSON.stringify(data));
+                err.status = res.status;
+                throw err;
+            }
+
+            return { text: data.candidates?.[0]?.content?.parts?.[0]?.text || "" };
         } catch (err) {
             const msg = (err.message || "").toString();
             // Retry on both 503 (busy) AND 429 (quota) - each model has its own quota pool
