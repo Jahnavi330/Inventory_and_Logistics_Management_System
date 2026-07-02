@@ -1,31 +1,8 @@
 const { GoogleGenAI } = require("@google/genai");
 const db = require("../config/db");
 
-// We will instantiate the AI client dynamically to ensure environment variables are fully loaded.
-let aiClient = null;
-const getAIClient = () => {
-    console.log("DEBUG: Checking API Key on Render...");
-    console.log("DEBUG: Type of key:", typeof process.env.GEMINI_API_KEY);
-    console.log("DEBUG: Key length:", process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0);
-    console.log("DEBUG: Key starts with:", process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 5) + "..." : "UNDEFINED");
-    console.log("DEBUG: Key ends with:", process.env.GEMINI_API_KEY ? "..." + process.env.GEMINI_API_KEY.slice(-3) : "UNDEFINED");
-    
-    if (!process.env.GEMINI_API_KEY) {
-        throw new Error("GEMINI_API_KEY is missing from environment variables. Please check your Render configuration.");
-    }
-    
-    // Sanitize key (remove spaces and accidental quotes)
-    let safeKey = process.env.GEMINI_API_KEY.trim().replace(/^["']|["']$/g, '');
-    
-    if (!safeKey) {
-        throw new Error("GEMINI_API_KEY is empty or invalid after removing spaces/quotes. Please check your Render configuration.");
-    }
-    
-    if (!aiClient) {
-        aiClient = new GoogleGenAI({ apiKey: safeKey });
-    }
-    return aiClient;
-};
+// Initialize Gemini Client
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Cache - 10 min TTL to reduce repeated quota hits
 const cache = {
@@ -51,7 +28,6 @@ const generateWithFallback = async (prompt) => {
     let lastError;
     for (const model of MODELS) {
         try {
-            const ai = getAIClient();
             const response = await ai.models.generateContent({ model, contents: prompt });
             return response;
         } catch (err) {
@@ -98,12 +74,7 @@ const handleAIError = (error, res) => {
         return res.status(502).json({ error: "Cannot connect to AI service. Check your internet connection.", code: 502 });
     }
     if (msg.includes("API_KEY") || msg.includes("API key") || error.status === 403 || error.status === 401) {
-        return res.status(401).json({ 
-            error: "Gemini Error: " + msg, 
-            details: msg,
-            status: error.status,
-            code: 401 
-        });
+        return res.status(401).json({ error: "Invalid Gemini API key. Please check your .env configuration.", code: 401 });
     }
 
     return res.status(500).json({ error: `AI error: ${msg.substring(0, 150) || "Unknown error. Please try again."}` });
