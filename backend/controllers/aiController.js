@@ -74,7 +74,12 @@ const handleAIError = (error, res) => {
         return res.status(502).json({ error: "Cannot connect to AI service. Check your internet connection.", code: 502 });
     }
     if (msg.includes("API_KEY") || msg.includes("API key") || error.status === 403 || error.status === 401) {
-        return res.status(401).json({ error: "Invalid Gemini API key. Please check your .env configuration.", code: 401 });
+        return res.status(401).json({ 
+            error: "Invalid Gemini API key or region blocked.", 
+            details: msg,
+            status: error.status,
+            code: 401 
+        });
     }
 
     return res.status(500).json({ error: `AI error: ${msg.substring(0, 150) || "Unknown error. Please try again."}` });
