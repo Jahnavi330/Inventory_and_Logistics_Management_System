@@ -75,7 +75,7 @@ const handleAIError = (error, res) => {
     }
     if (msg.includes("API_KEY") || msg.includes("API key") || error.status === 403 || error.status === 401) {
         return res.status(401).json({ 
-            error: "Invalid Gemini API key or region blocked.", 
+            error: "Gemini Error: " + msg, 
             details: msg,
             status: error.status,
             code: 401 
