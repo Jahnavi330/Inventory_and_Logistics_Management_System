@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 totalResults += data.orders.length;
                 html += `<div style="padding: 8px 12px; font-weight: bold; color: var(--accent-cyan); border-bottom: 1px solid var(--border); margin-top: 10px;">📋 Orders</div>`;
                 data.orders.forEach(o => {
-                    html += `<a href="index.html" style="display: block; padding: 10px 12px; text-decoration: none; color: var(--text-primary); transition: 0.2s;">
+                    html += `<a href="logistics.html" style="display: block; padding: 10px 12px; text-decoration: none; color: var(--text-primary); transition: 0.2s;">
                                 <div><strong>Order #${o.order_id}</strong> - ${o.product_name}</div>
                                 <div style="font-size: 13px; color: var(--text-muted);">Qty: ${o.quantity} | Status: ${o.status}</div>
                              </a>`;
