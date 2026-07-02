@@ -1,8 +1,17 @@
 const { GoogleGenAI } = require("@google/genai");
 const db = require("../config/db");
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// We will instantiate the AI client dynamically to ensure environment variables are fully loaded.
+let aiClient = null;
+const getAIClient = () => {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY is missing from environment variables. Please check your Render configuration.");
+    }
+    if (!aiClient) {
+        aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    }
+    return aiClient;
+};
 
 // Cache - 10 min TTL to reduce repeated quota hits
 const cache = {
@@ -28,6 +37,7 @@ const generateWithFallback = async (prompt) => {
     let lastError;
     for (const model of MODELS) {
         try {
+            const ai = getAIClient();
             const response = await ai.models.generateContent({ model, contents: prompt });
             return response;
         } catch (err) {
