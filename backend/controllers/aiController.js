@@ -4,11 +4,25 @@ const db = require("../config/db");
 // We will instantiate the AI client dynamically to ensure environment variables are fully loaded.
 let aiClient = null;
 const getAIClient = () => {
+    console.log("DEBUG: Checking API Key on Render...");
+    console.log("DEBUG: Type of key:", typeof process.env.GEMINI_API_KEY);
+    console.log("DEBUG: Key length:", process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0);
+    console.log("DEBUG: Key starts with:", process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 5) + "..." : "UNDEFINED");
+    console.log("DEBUG: Key ends with:", process.env.GEMINI_API_KEY ? "..." + process.env.GEMINI_API_KEY.slice(-3) : "UNDEFINED");
+    
     if (!process.env.GEMINI_API_KEY) {
         throw new Error("GEMINI_API_KEY is missing from environment variables. Please check your Render configuration.");
     }
+    
+    // Sanitize key (remove spaces and accidental quotes)
+    let safeKey = process.env.GEMINI_API_KEY.trim().replace(/^["']|["']$/g, '');
+    
+    if (!safeKey) {
+        throw new Error("GEMINI_API_KEY is empty or invalid after removing spaces/quotes. Please check your Render configuration.");
+    }
+    
     if (!aiClient) {
-        aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        aiClient = new GoogleGenAI({ apiKey: safeKey });
     }
     return aiClient;
 };
