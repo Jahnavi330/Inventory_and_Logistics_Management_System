@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5000/auth";
+const BASE_URL = "https://inventory-and-logistics-management-system.onrender.com/auth";
 
 function registerUser(){
     const name = document.getElementById("name") ? document.getElementById("name").value : '';

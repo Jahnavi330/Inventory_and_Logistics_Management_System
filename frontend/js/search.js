@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsContainer.style.display = "block";
             resultsContainer.innerHTML = `<div style="padding: 10px; color: var(--text-muted); text-align: center;">Searching...</div>`;
 
-            const res = await fetch(`http://localhost:5000/search?q=${encodeURIComponent(query)}`);
+            const res = await fetch(`https://inventory-and-logistics-management-system.onrender.com/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
 
             let html = "";
