@@ -1,12 +1,13 @@
 require("dotenv").config();
 const mysql = require("mysql2");
+const dbPort = parseInt(process.env.DB_PORT || "3306", 10);
 console.log("HOST:", process.env.DB_HOST);
-console.log("PORT:", process.env.PORT);
+console.log("PORT:", dbPort);
 console.log("USER:", process.env.DB_USER);
 console.log("DATABASE:", process.env.DB_NAME);
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
-  port: parseInt(process.env.PORT, 10),
+  port: dbPort,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
@@ -16,6 +17,13 @@ const connection = mysql.createConnection({
   connectTimeout: 60000,
   multipleStatements: true,
 });
+connection.on("error", (err) => {
+    console.error("MySQL connection error:", err.message);
+    if (err.code === "PROTOCOL_CONNECTION_LOST" || err.code === "ECONNRESET") {
+        console.warn("MySQL connection dropped. The app will continue running, but database-backed routes may be unavailable until reconnection.");
+    }
+});
+
 connection.connect((err) => {
     if (err) {
         console.error("MySQL Connection Error:", err);
